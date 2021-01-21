@@ -147,7 +147,9 @@ void loop() {
       txtMsg += inChar;
     }
     if (inChar == 'd') {
-      Serial.println("ok");
+      Serial.print("ok");
+      delay(50);
+      Serial.print("end");
       state = true;
     }
 
