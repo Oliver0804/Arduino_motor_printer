@@ -1,4 +1,3 @@
-
 #include <Servo.h>
 
 Servo myservo;  // create servo object to control a servo
@@ -19,6 +18,11 @@ int pos = 0;    // variable to store the servo position
 
 
 String txtMsg = "";
+bool state = false;
+int gcodeRowIndex = 0;
+int power = 500;
+int delaytime = 0;
+
 String inString = "";    // string to hold input
 
 
@@ -26,8 +30,6 @@ int cmdX = 0;
 int cmdY = 0;
 int nowX = 50;
 int nowY = 50;
-int power=500;
-int delaytime=0;
 
 int cmdflag = 0;
 
@@ -37,7 +39,7 @@ void servo() {
   digitalWrite(EnPin, HIGH);
   myservo.write(100);
   while (!digitalRead(touchsenserPin)) {
-    Serial.println("wait touch");
+//    Serial.println("wait touch");
     delay(10);
   }
   delay(power);
@@ -46,9 +48,77 @@ void servo() {
   myservo.write(90);
 }
 
+String getValue(String data, char separator, int index) {
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length() - 1;
+
+  for (int i = 0; i <= maxIndex && found <= index; i++) {
+    if (data.charAt(i) == separator || i == maxIndex) {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+void moving(int cmdX , int cmdY){
+  if (cmdX > nowX) {
+    digitalWrite(EnPin, LOW);
+//    Serial.println(nowX++);
+    digitalWrite(xDirPin, HIGH);
+
+    digitalWrite(xStepPin, LOW);
+    delay(delaytime);
+    digitalWrite(xStepPin, HIGH);
+
+  } else if (cmdX < nowX) {
+    digitalWrite(EnPin, LOW);
+//    Serial.println(nowX--);
+    digitalWrite(xDirPin, LOW);
+    digitalWrite(xStepPin, LOW);
+    delay(delaytime);
+    digitalWrite(xStepPin, HIGH);
+
+  } 
+//  else {
+//
+//  }
+  if (cmdY > nowY) {
+    digitalWrite(EnPin, LOW);
+//    Serial.println(nowY++);
+    digitalWrite(yDirPin, HIGH);
+    digitalWrite(yStepPin, LOW);
+    delay(delaytime);
+    digitalWrite(yStepPin, HIGH);
+    delay(delaytime);
+  } else if (cmdY < nowY) {
+    digitalWrite(EnPin, LOW);
+//    Serial.println(nowY--);
+    digitalWrite(yDirPin, LOW);
+    digitalWrite(yStepPin, LOW);
+    delay(delaytime);
+    digitalWrite(yStepPin, HIGH);
+
+  } 
+//  else {
+//
+//  }
+  if (cmdX == nowX && cmdY == nowY) {
+    if (cmdflag == 1) {
+      servo();
+//      Serial.print("OK");
+      digitalWrite(EnPin, HIGH);
+      cmdflag = 0;
+    }
+  }
+}
+
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(xDirPin, OUTPUT);
   pinMode(yDirPin, OUTPUT);
   pinMode(xStepPin, OUTPUT);
@@ -59,125 +129,51 @@ void setup() {
   digitalWrite(EnPin, HIGH);
   myservo.attach(11);  // attaches the servo on pin 9 to the servo object
   while (!digitalRead(touchsenserPin)) {
-    Serial.println("pls touch sensor");
+//    Serial.println("pls touch sensor");
     delay(10);
   }
-  //while (!Serial) {
-  //  ; // wait for serial port to connect. Needed for native USB port only
-  // }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   digitalWrite(EnPin, HIGH);
+
   while (Serial.available() > 0) {
     char inChar = Serial.read();
-    txtMsg += inChar;
+
+    if (inChar == 'c') {
+      txtMsg = "";
+    }
+    else {
+      txtMsg += inChar;
+    }
+    if (inChar == 'd') {
+      Serial.println("ok");
+      state = true;
+    }
+
   }
-  // print the message and a notice if it's changed:
-  if (txtMsg.length() >= 11) {
+  if (state) {
+
+    String gcode = getValue(txtMsg, ';', gcodeRowIndex);
     
-    if (txtMsg[0] == '(' && txtMsg[8] == ')') {
-      cmdflag = 1;
-      Serial.println(txtMsg);
-      Serial.println(txtMsg.length());
-      Serial.println(txtMsg[1]);
-      inString += txtMsg[1];
-      inString += txtMsg[2];
-      inString += txtMsg[3];
-      cmdX = inString.toInt();
-      inString = "";
-      inString += txtMsg[5];
-      inString += txtMsg[6];
-      inString += txtMsg[7];
-      cmdY = inString.toInt();
-      inString = "";
-      Serial.print("cmdX:");
-      Serial.println(cmdX);
-      Serial.print("cmdY:");
-      Serial.println(cmdY);
-    }else if (txtMsg[0] == 'P') {
-      //cmdflag = 1;
-      Serial.println(txtMsg);
-      Serial.println(txtMsg.length());
-      Serial.println(txtMsg[1]);
-      inString += txtMsg[1];
-      inString += txtMsg[2];
-      inString += txtMsg[3];
-      power = inString.toInt();
-      inString = "";
-      inString += txtMsg[5];
-      inString += txtMsg[6];
-      inString += txtMsg[7];
-      //cmdY = inString.toInt();
-      inString = "";
-      Serial.print("power:");
-      Serial.println(power);
-    }else if (txtMsg[0] == 'D') {
-      //cmdflag = 1;
-      Serial.println(txtMsg);
-      Serial.println(txtMsg.length());
-      Serial.println(txtMsg[1]);
-      inString += txtMsg[1];
-      inString += txtMsg[2];
-      inString += txtMsg[3];
-      delaytime = inString.toInt();
-      inString = "";
-      inString += txtMsg[5];
-      inString += txtMsg[6];
-      inString += txtMsg[7];
-      //cmdY = inString.toInt();
-      inString = "";
-      Serial.print("delaytime:");
-      Serial.println(delaytime);
+    if (gcode == "end") {
+      
+      gcodeRowIndex = 0;
+      txtMsg = "";
+      state = false;
     }
-    txtMsg = "";
-  }
-  if (cmdX > nowX) {
-    digitalWrite(EnPin, LOW);
-    Serial.println(nowX++);
-    digitalWrite(xDirPin, HIGH);
-
-    digitalWrite(xStepPin, LOW);
-    delay(delaytime);
-    digitalWrite(xStepPin, HIGH);
-
-  } else if (cmdX < nowX) {
-    digitalWrite(EnPin, LOW);
-    Serial.println(nowX--);
-    digitalWrite(xDirPin, LOW);
-    digitalWrite(xStepPin, LOW);
-    delay(delaytime);
-    digitalWrite(xStepPin, HIGH);
-
-  } else {
-
-  }
-  if (cmdY > nowY) {
-    digitalWrite(EnPin, LOW);
-    Serial.println(nowY++);
-    digitalWrite(yDirPin, HIGH);
-    digitalWrite(yStepPin, LOW);
-    delay(delaytime);
-    digitalWrite(yStepPin, HIGH);
-    delay(delaytime);
-  } else if (cmdY < nowY) {
-    digitalWrite(EnPin, LOW);
-    Serial.println(nowY--);
-    digitalWrite(yDirPin, LOW);
-    digitalWrite(yStepPin, LOW);
-    delay(delaytime);
-    digitalWrite(yStepPin, HIGH);
-
-  } else {
-
-  }
-  if (cmdX == nowX && cmdY == nowY) {
-    if (cmdflag == 1) {
-      servo();
-      Serial.print("OK");
-      digitalWrite(EnPin, HIGH);
-      cmdflag = 0;
+    else {
+      int  x = getValue(gcode, ',', 0).toInt();
+      int  y = getValue(gcode, ',', 1).toInt();
+      if (gcodeRowIndex == 0) {
+        power = x;
+        delaytime = y;
+        
+      } else {
+        moving(x,y);
+      }
+      ++gcodeRowIndex;
     }
+
   }
 }
