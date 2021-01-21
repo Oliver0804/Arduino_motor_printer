@@ -66,7 +66,10 @@ String getValue(String data, char separator, int index) {
 void moving(int cmdX , int cmdY){
   if (cmdX > nowX) {
     digitalWrite(EnPin, LOW);
-//    Serial.println(nowX++);
+
+    nowX++;
+    Serial.println(nowX);
+
     digitalWrite(xDirPin, HIGH);
 
     digitalWrite(xStepPin, LOW);
@@ -75,7 +78,10 @@ void moving(int cmdX , int cmdY){
 
   } else if (cmdX < nowX) {
     digitalWrite(EnPin, LOW);
-//    Serial.println(nowX--);
+
+    nowX--;
+    Serial.println(nowX);
+
     digitalWrite(xDirPin, LOW);
     digitalWrite(xStepPin, LOW);
     delay(delaytime);
@@ -87,7 +93,10 @@ void moving(int cmdX , int cmdY){
 //  }
   if (cmdY > nowY) {
     digitalWrite(EnPin, LOW);
-//    Serial.println(nowY++);
+
+    nowY++;
+    Serial.println(nowY);
+
     digitalWrite(yDirPin, HIGH);
     digitalWrite(yStepPin, LOW);
     delay(delaytime);
@@ -95,7 +104,10 @@ void moving(int cmdX , int cmdY){
     delay(delaytime);
   } else if (cmdY < nowY) {
     digitalWrite(EnPin, LOW);
-//    Serial.println(nowY--);
+
+    nowY--;
+    Serial.println(nowY);
+
     digitalWrite(yDirPin, LOW);
     digitalWrite(yStepPin, LOW);
     delay(delaytime);
