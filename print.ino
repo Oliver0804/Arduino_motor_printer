@@ -4,7 +4,7 @@ Servo myservo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 
 int pos = 0;    // variable to store the servo position
-
+#define debug 0
 #define xDirPin 5
 #define yDirPin 6
 
@@ -39,7 +39,7 @@ void servo() {
   digitalWrite(EnPin, HIGH);
   myservo.write(100);
   while (!digitalRead(touchsenserPin)) {
-        Serial.println("wait touch");
+        if(debug)Serial.println("wait touch");
     delay(10);
   }
   delay(power);
@@ -64,8 +64,10 @@ String getValue(String data, char separator, int index) {
 }
 
 void moving(int cmdX , int cmdY) {
+  int movingFlag=0;
   while (cmdflag == 1) {
     if (cmdX > nowX) {
+      movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowX++;
       Serial.println(nowX);
@@ -74,6 +76,7 @@ void moving(int cmdX , int cmdY) {
       delay(delaytime);
       digitalWrite(xStepPin, HIGH);
     } else if (cmdX < nowX) {
+      movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowX--;
       Serial.println(nowX);
@@ -83,8 +86,8 @@ void moving(int cmdX , int cmdY) {
       digitalWrite(xStepPin, HIGH);
       delay(delaytime);
     }
-
     if (cmdY > nowY) {
+      movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowY++;
       Serial.println(nowY);
@@ -94,6 +97,7 @@ void moving(int cmdX , int cmdY) {
       digitalWrite(yStepPin, HIGH);
       delay(delaytime);
     } else if (cmdY < nowY) {
+      movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowY--;
       Serial.println(nowY);
@@ -105,8 +109,8 @@ void moving(int cmdX , int cmdY) {
     }
     if (cmdX == nowX && cmdY == nowY) {
       if (cmdflag == 1) {
-        servo();
-        Serial.print("OK");
+        if(movingFlag==1)servo();
+        if(debug)Serial.print("OK");
         digitalWrite(EnPin, HIGH);
         cmdflag = 0;
       }
@@ -127,16 +131,17 @@ void setup() {
   pinMode(touchsenserPin, INPUT);
 
   digitalWrite(EnPin, HIGH);
-  while (1) {//for debug
+  while (0) {//for debug
     cmdflag=1;
-    moving(100, 100);
+    moving(0, 500);
     delay(1000);
     cmdflag=1;
-    moving(0, 0);
+    moving(500, 0);
+    delay(1000);
   }
   myservo.attach(11);  // attaches the servo on pin 9 to the servo object
   while (!digitalRead(touchsenserPin)) {
-        Serial.println("pls touch sensor");
+        if(debug)Serial.println("pls touch sensor");
     delay(10);
   }
 }
