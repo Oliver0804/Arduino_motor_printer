@@ -21,15 +21,14 @@ String txtMsg = "";
 bool state = false;
 int gcodeRowIndex = 0;
 int power = 500;
-int delaytime = 0;
-
+int delaytime = 150;
 String inString = "";    // string to hold input
 
 
-int cmdX = 0;
-int cmdY = 0;
-int nowX = 50;
-int nowY = 50;
+long int cmdX = 0;
+long int cmdY = 0;
+long int nowX = 50;
+long int nowY = 50;
 
 int cmdflag = 0;
 
@@ -70,42 +69,43 @@ void moving(int cmdX , int cmdY) {
       movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowX++;
-      Serial.println(nowX);
+      if(debug)Serial.println(nowX);
       digitalWrite(xDirPin, HIGH);
       digitalWrite(xStepPin, LOW);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
       digitalWrite(xStepPin, HIGH);
+      delayMicroseconds(delaytime);
     } else if (cmdX < nowX) {
       movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowX--;
-      Serial.println(nowX);
+      if(debug)Serial.println(nowX);
       digitalWrite(xDirPin, LOW);
       digitalWrite(xStepPin, LOW);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
       digitalWrite(xStepPin, HIGH);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
     }
     if (cmdY > nowY) {
       movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowY++;
-      Serial.println(nowY);
+      if(debug)Serial.println(nowY);
       digitalWrite(yDirPin, HIGH);
       digitalWrite(yStepPin, LOW);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
       digitalWrite(yStepPin, HIGH);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
     } else if (cmdY < nowY) {
       movingFlag=1;
       digitalWrite(EnPin, LOW);
       nowY--;
-      Serial.println(nowY);
+      if(debug)Serial.println(nowY);
       digitalWrite(yDirPin, LOW);
       digitalWrite(yStepPin, LOW);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
       digitalWrite(yStepPin, HIGH);
-      delay(delaytime);
+      delayMicroseconds(delaytime);
     }
     if (cmdX == nowX && cmdY == nowY) {
       if (cmdflag == 1) {
@@ -131,7 +131,7 @@ void setup() {
   pinMode(touchsenserPin, INPUT);
 
   digitalWrite(EnPin, HIGH);
-  while (0) {//for debug
+  while (1) {//for debug
     cmdflag=1;
     moving(0, 500);
     delay(1000);
