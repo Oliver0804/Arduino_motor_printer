@@ -13,10 +13,12 @@ int pos = 0;    // variable to store the servo position
 
 #define EnPin 8
 
-#define xDefineDir 1
-#define yDefineDir 0
+#define xDefineDir 0
+#define yDefineDir 1
 
 #define touchsenserPin 9
+
+#define laserPin 11
 // variable for reading the pushbutton status
 
 
@@ -24,7 +26,7 @@ String txtMsg = "";
 bool state = false;
 int gcodeRowIndex = 0;
 int power = 50;
-int delaytime =2;
+int delaytime = 2;
 String inString = "";    // string to hold input
 
 
@@ -39,17 +41,16 @@ int Xdir = 0;
 int Ydir = 0;
 void servo() {
   digitalWrite(EnPin, HIGH);
-  myservo.write(100);
+  myservo.write(190-power*10);
   /*
-  while (!digitalRead(touchsenserPin)) {
+    while (!digitalRead(touchsenserPin)) {
         if(debug>=2)Serial.println("wait touch");
     delay(10);
-  }
+    }
   */
-  delay(power);
-  myservo.write(180);
-  delay(power);
+  delay(50+(power*10));
   myservo.write(190);
+  delay(50+(power*10));
 }
 
 String getValue(String data, char separator, int index) {
@@ -66,25 +67,66 @@ String getValue(String data, char separator, int index) {
   }
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
-
+void moveMotor(int motorNum, int motorDir, int step_count) {
+  digitalWrite(EnPin, LOW);
+  switch (motorNum) {
+    case 1:
+      while (step_count) {
+        if (motorDir == 0) {
+          digitalWrite(xDirPin, !xDefineDir);
+          digitalWrite(xStepPin, LOW);
+          delay(delaytime);
+          digitalWrite(xStepPin, HIGH);
+        } else {
+          digitalWrite(xDirPin, xDefineDir);
+          digitalWrite(xStepPin, LOW);
+          delay(delaytime);
+          digitalWrite(xStepPin, HIGH);
+        }
+        if (step_count >= 1) {
+          step_count--;
+        }
+      }
+      break;
+    case 2:
+        while (step_count) {
+        if (motorDir == 0) {
+          digitalWrite(yDirPin, !yDefineDir);
+          digitalWrite(yStepPin, LOW);
+          delay(delaytime);
+          digitalWrite(yStepPin, HIGH);
+        } else {
+          digitalWrite(yDirPin, yDefineDir);
+          digitalWrite(yStepPin, LOW);
+          delay(delaytime);
+          digitalWrite(yStepPin, HIGH);
+        }
+        if (step_count >= 1) {
+          step_count--;
+        }
+      }
+      break;
+      
+  }
+}
 void moving(long int cmdX , long int cmdY) {
-  int movingFlag=0;
+  int movingFlag = 0;
   while (cmdflag == 1) {
     if (cmdX > nowX) {
-      movingFlag=1;
+      movingFlag = 1;
       digitalWrite(EnPin, LOW);
       nowX++;
-      if(debug)Serial.println(nowX);
+      if (debug)Serial.println(nowX);
       digitalWrite(xDirPin, !xDefineDir);
       digitalWrite(xStepPin, LOW);
       delay(delaytime);
       digitalWrite(xStepPin, HIGH);
       //delay(delaytime);
     } else if (cmdX < nowX) {
-      movingFlag=1;
+      movingFlag = 1;
       digitalWrite(EnPin, LOW);
       nowX--;
-      if(debug)Serial.println(nowX);
+      if (debug)Serial.println(nowX);
       digitalWrite(xDirPin, xDefineDir);
       digitalWrite(xStepPin, LOW);
       delay(delaytime);
@@ -92,30 +134,32 @@ void moving(long int cmdX , long int cmdY) {
       //delay(delaytime);
     }
     if (cmdY > nowY) {
-      movingFlag=1;
+      movingFlag = 1;
       digitalWrite(EnPin, LOW);
       nowY++;
-      if(debug)Serial.println(nowY);
+      if (debug)Serial.println(nowY);
       digitalWrite(yDirPin, !yDefineDir);
       digitalWrite(yStepPin, LOW);
       delay(delaytime);
       digitalWrite(yStepPin, HIGH);
       //delay(delaytime);
     } else if (cmdY < nowY) {
-      movingFlag=1;
+      movingFlag = 1;
       digitalWrite(EnPin, LOW);
       nowY--;
-      if(debug)Serial.println(nowY);
+      if (debug)Serial.println(nowY);
       digitalWrite(yDirPin, yDefineDir);
       digitalWrite(yStepPin, LOW);
       delay(delaytime);
       digitalWrite(yStepPin, HIGH);
       //delay(delaytime);
     }
-     digitalWrite(EnPin, HIGH);
+    digitalWrite(EnPin, HIGH);
     if (cmdX == nowX && cmdY == nowY) {
       if (cmdflag == 1) {
-        if(movingFlag==1)servo();
+        delay(150);
+        if (movingFlag == 1)servo();
+        delay(50);
         //if(debug)Serial.print("OK");
         digitalWrite(EnPin, HIGH);
         cmdflag = 0;
@@ -135,35 +179,36 @@ void setup() {
   pinMode(yStepPin, OUTPUT);
   pinMode(EnPin, OUTPUT);
   pinMode(touchsenserPin, INPUT);
-
+  pinMode(laserPin, OUTPUT); 
+  digitalWrite(laserPin, LOW);  
   digitalWrite(EnPin, HIGH);
   myservo.attach(11);  // attaches the servo on pin 9 to the servo object
+  myservo.write(190);
   //極限測試
   //cmdflag=1;
   //moving(350, 0);
   //moving(0, 95000);
   
-  if (1) {//for debug
-    cmdflag=1;
-    moving(200, 200);
+  if (0) {//for debug
+    cmdflag = 1;
+    moving(140, 120*50);
     delay(1000);
-    cmdflag=1;
+    cmdflag = 1;
     moving(0, 0);
     delay(1000);
 
 
   }
   /*
-  while (!digitalRead(touchsenserPin)) {
+    while (!digitalRead(touchsenserPin)) {
         if(debug>=2)Serial.println("pls touch sensor");
     delay(10);
-  }
+    }
   */
 }
 
 void loop() {
- 
-digitalWrite(EnPin, HIGH);
+
   while (Serial.available() > 0) {
     char inChar = Serial.read();
     if (inChar == 'c') {
@@ -177,16 +222,33 @@ digitalWrite(EnPin, HIGH);
       delay(50);
       Serial.print("end");
       state = true;
-      
+
     }
+    if(inChar=='+'){
+      moveMotor(1,0,1);
+      digitalWrite(EnPin, HIGH);
+      }
+    if(inChar=='-'){
+      moveMotor(1,1,1);
+      digitalWrite(EnPin, HIGH);
+      }
+    if(inChar=='&'){
+      moveMotor(2,0,50);
+      digitalWrite(EnPin, HIGH);
+      }
+    if(inChar=='*'){
+      moveMotor(2,1,50);
+      digitalWrite(EnPin, HIGH);
+      }
+      
 
   }
+   //Serial.print(state);
   if (state) {
 
     String gcode = getValue(txtMsg, ';', gcodeRowIndex);
 
     if (gcode == "end") {
-
       gcodeRowIndex = 0;
       txtMsg = "";
       state = false;
@@ -194,14 +256,17 @@ digitalWrite(EnPin, HIGH);
     else {
       int  x = getValue(gcode, ',', 0).toInt();
       int  y = getValue(gcode, ',', 1).toInt();
+
       if (gcodeRowIndex == 0) {
         power = x;
         delaytime = y;
 
       } else {
-        cmdflag=1;
-        //moving((x-100)*5, (y-0)*100);
-        moving(x, y*50);
+        //長300 寬100
+        x=map(x,0,300,0,6000);
+        y-map(y,0,80,0,140);
+        cmdflag = 1;
+        moving(y,x);
       }
       ++gcodeRowIndex;
     }
