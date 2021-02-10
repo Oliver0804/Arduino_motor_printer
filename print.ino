@@ -41,16 +41,16 @@ int Xdir = 0;
 int Ydir = 0;
 void servo() {
   digitalWrite(EnPin, HIGH);
-  myservo.write(190-power*10);
+  myservo.write(155 - power);
   /*
     while (!digitalRead(touchsenserPin)) {
         if(debug>=2)Serial.println("wait touch");
     delay(10);
     }
   */
-  delay(50+(power*10));
-  myservo.write(190);
-  delay(50+(power*10));
+  delay(100 + (power * 5));
+  myservo.write(180);
+  delay(100 + (power * 5));
 }
 
 String getValue(String data, char separator, int index) {
@@ -89,7 +89,7 @@ void moveMotor(int motorNum, int motorDir, int step_count) {
       }
       break;
     case 2:
-        while (step_count) {
+      while (step_count) {
         if (motorDir == 0) {
           digitalWrite(yDirPin, !yDefineDir);
           digitalWrite(yStepPin, LOW);
@@ -106,7 +106,7 @@ void moveMotor(int motorNum, int motorDir, int step_count) {
         }
       }
       break;
-      
+
   }
 }
 void moving(long int cmdX , long int cmdY) {
@@ -179,23 +179,37 @@ void setup() {
   pinMode(yStepPin, OUTPUT);
   pinMode(EnPin, OUTPUT);
   pinMode(touchsenserPin, INPUT);
-  pinMode(laserPin, OUTPUT); 
-  digitalWrite(laserPin, LOW);  
+  pinMode(laserPin, OUTPUT);
+  digitalWrite(laserPin, LOW);
   digitalWrite(EnPin, HIGH);
   myservo.attach(11);  // attaches the servo on pin 9 to the servo object
-  myservo.write(190);
+  delay(200);
+  myservo.write(180);
+  delay(1000);
+  myservo.write(140);
+  delay(1000);
+  myservo.write(180);
+
+  int x = 0;
+  while (0) {
+    myservo.write(0);
+    delay(1000);
+    myservo.write(180);
+    delay(1000);
+  }
+
   //極限測試
   //cmdflag=1;
   //moving(350, 0);
   //moving(0, 95000);
-  
+
   if (0) {//for debug
     cmdflag = 1;
-    moving(140, 120*50);
-    delay(1000);
+    moving(140, 120 * 50);
+    delay(10000);
     cmdflag = 1;
     moving(0, 0);
-    delay(1000);
+    delay(10000);
 
 
   }
@@ -224,26 +238,26 @@ void loop() {
       state = true;
 
     }
-    if(inChar=='+'){
-      moveMotor(1,0,1);
+    if (inChar == '+') {
+      moveMotor(1, 0, 1);
       digitalWrite(EnPin, HIGH);
-      }
-    if(inChar=='-'){
-      moveMotor(1,1,1);
+    }
+    if (inChar == '-') {
+      moveMotor(1, 1, 1);
       digitalWrite(EnPin, HIGH);
-      }
-    if(inChar=='&'){
-      moveMotor(2,0,50);
+    }
+    if (inChar == '&') {
+      moveMotor(2, 0, 50);
       digitalWrite(EnPin, HIGH);
-      }
-    if(inChar=='*'){
-      moveMotor(2,1,50);
+    }
+    if (inChar == '*') {
+      moveMotor(2, 1, 50);
       digitalWrite(EnPin, HIGH);
-      }
-      
+    }
+
 
   }
-   //Serial.print(state);
+  //Serial.print(state);
   if (state) {
 
     String gcode = getValue(txtMsg, ';', gcodeRowIndex);
@@ -263,10 +277,10 @@ void loop() {
 
       } else {
         //長300 寬100
-        x=map(x,0,300,0,6000);
-        y-map(y,0,80,0,140);
+        x = map(x, 0, 300, 0, 6000);
+        y - map(y, 0, 80, 0, 140);
         cmdflag = 1;
-        moving(y,x);
+        moving(y, x);
       }
       ++gcodeRowIndex;
     }
