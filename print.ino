@@ -183,7 +183,7 @@ void moving(long int cmdX , long int cmdY) {
         delay(150);
         if (movingFlag == 1)servo();
         delay(50);
-        //if(debug)Serial.print("OK");
+        //if(debug)Serial.print("OK!!!");
         digitalWrite(EnPin, HIGH);
         cmdflag = 0;
       }
@@ -258,23 +258,28 @@ void loop() {
       Serial.print("ok");
       delay(50);
       Serial.print("end");
+      gcodeRowIndex=0;
       state = true;
 
     }
     if (inChar == '+') {
       moveMotor(1, 0, 10);
+      //Serial.print("ok");
       digitalWrite(EnPin, HIGH);
     }
     if (inChar == '-') {
       moveMotor(1, 1, 10);
+      //Serial.print("ok");
       digitalWrite(EnPin, HIGH);
     }
     if (inChar == '&') {
       moveMotor(2, 0, 50);
+      //Serial.print("ok");
       digitalWrite(EnPin, HIGH);
     }
     if (inChar == '*') {
       moveMotor(2, 1, 50);
+      //Serial.print("ok");
       digitalWrite(EnPin, HIGH);
     }
     if (inChar == '#') {
@@ -310,11 +315,13 @@ void loop() {
   if (state) {
 
     String gcode = getValue(txtMsg, ';', gcodeRowIndex);
-
+    //Serial.print("GCODE:");
+    //Serial.println(gcode);
     if (gcode == "end") {
       gcodeRowIndex = 0;
       txtMsg = "";
       state = false;
+      Serial.print("FALSE!");
     }
     else {
       int  x = getValue(gcode, ',', 0).toInt();
@@ -322,14 +329,15 @@ void loop() {
 
       if (gcodeRowIndex == 0) {
         //power = x;
-        delaytime = y;
-
+        //delaytime = y;
+        Serial.println("gcode 1");
       } else {
         //長300 寬100
         x = map(x, 0, 300, 0, 6000);
         y - map(y, 0, 80, 0, 140);
         cmdflag = 1;
         moving(y, x);
+        //digitalWrite(EnPin, HIGH);
       }
       ++gcodeRowIndex;
     }
