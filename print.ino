@@ -26,7 +26,7 @@ String txtMsg = "";
 bool state = false;
 int gcodeRowIndex = 0;
 int power = 50;
-int delaytime = 2;
+int delaytime = 5;
 String inString = "";    // string to hold input
 
 
@@ -41,6 +41,7 @@ int Xdir = 0;
 int Ydir = 0;
 void servo() {
   digitalWrite(EnPin, HIGH);
+  //delay(50);
   myservo.write(155 - power);
   /*
     while (!digitalRead(touchsenserPin)) {
@@ -49,9 +50,24 @@ void servo() {
     }
   */
   delay(100 + (power * 5));
-  myservo.write(180);
+  myservo.write(179);
   delay(100 + (power * 5));
 }
+void new_servo() {
+  digitalWrite(EnPin, HIGH);
+  //delay(50);
+  myservo.write(power);
+  /*
+    while (!digitalRead(touchsenserPin)) {
+        if(debug>=2)Serial.println("wait touch");
+    delay(10);
+    }
+  */
+  delay(100 + (power * 2));
+  myservo.write(179);
+  delay(100 + (power * 2));
+}
+
 
 String getValue(String data, char separator, int index) {
   int found = 0;
@@ -69,6 +85,7 @@ String getValue(String data, char separator, int index) {
 }
 void moveMotor(int motorNum, int motorDir, int step_count) {
   digitalWrite(EnPin, LOW);
+  delay(10);
   switch (motorNum) {
     case 1:
       while (step_count) {
@@ -87,6 +104,7 @@ void moveMotor(int motorNum, int motorDir, int step_count) {
           step_count--;
         }
       }
+      digitalWrite(EnPin, HIGH);
       break;
     case 2:
       while (step_count) {
@@ -105,6 +123,7 @@ void moveMotor(int motorNum, int motorDir, int step_count) {
           step_count--;
         }
       }
+      digitalWrite(EnPin, HIGH);
       break;
 
   }
@@ -115,6 +134,7 @@ void moving(long int cmdX , long int cmdY) {
     if (cmdX > nowX) {
       movingFlag = 1;
       digitalWrite(EnPin, LOW);
+      //Serial.print("ENLOW");
       nowX++;
       if (debug)Serial.println(nowX);
       digitalWrite(xDirPin, !xDefineDir);
@@ -125,6 +145,7 @@ void moving(long int cmdX , long int cmdY) {
     } else if (cmdX < nowX) {
       movingFlag = 1;
       digitalWrite(EnPin, LOW);
+      //Serial.print("ENLOW");
       nowX--;
       if (debug)Serial.println(nowX);
       digitalWrite(xDirPin, xDefineDir);
@@ -136,6 +157,7 @@ void moving(long int cmdX , long int cmdY) {
     if (cmdY > nowY) {
       movingFlag = 1;
       digitalWrite(EnPin, LOW);
+      //Serial.print("ENLOW");
       nowY++;
       if (debug)Serial.println(nowY);
       digitalWrite(yDirPin, !yDefineDir);
@@ -146,6 +168,7 @@ void moving(long int cmdX , long int cmdY) {
     } else if (cmdY < nowY) {
       movingFlag = 1;
       digitalWrite(EnPin, LOW);
+      //Serial.print("ENLOW");
       nowY--;
       if (debug)Serial.println(nowY);
       digitalWrite(yDirPin, yDefineDir);
@@ -239,11 +262,11 @@ void loop() {
 
     }
     if (inChar == '+') {
-      moveMotor(1, 0, 1);
+      moveMotor(1, 0, 10);
       digitalWrite(EnPin, HIGH);
     }
     if (inChar == '-') {
-      moveMotor(1, 1, 1);
+      moveMotor(1, 1, 10);
       digitalWrite(EnPin, HIGH);
     }
     if (inChar == '&') {
@@ -252,6 +275,32 @@ void loop() {
     }
     if (inChar == '*') {
       moveMotor(2, 1, 50);
+      digitalWrite(EnPin, HIGH);
+    }
+    if (inChar == '#') {
+      //上升
+      power = power - 5;
+      if (power < 0) {
+        power = 0;
+      } else {
+        power = power - 5;
+      }
+      Serial.println(power);
+      digitalWrite(EnPin, HIGH);
+    }
+    if (inChar == '%') {
+      //下降
+      power = power + 5;
+      if (power > 170) {
+        power = 170;
+      } else {
+        power = power + 5;
+      }
+      Serial.println(power);
+      digitalWrite(EnPin, HIGH);
+    }
+    if (inChar == '@') {
+      new_servo();
       digitalWrite(EnPin, HIGH);
     }
 
@@ -272,7 +321,7 @@ void loop() {
       int  y = getValue(gcode, ',', 1).toInt();
 
       if (gcodeRowIndex == 0) {
-        power = x;
+        //power = x;
         delaytime = y;
 
       } else {
